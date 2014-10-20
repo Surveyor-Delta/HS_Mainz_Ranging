@@ -4,14 +4,27 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.ListView;
 
 
 public class MainActivity extends Activity {
+
+
+    ListView listView;
+    Button buttonStart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Connecting listView
+        listView = (ListView) findViewById(R.id.listView);
+
+        // Initialising 'Start' button + adding Listener
+        buttonStart = (Button) findViewById(R.id.buttonStart);
+        buttonStart.setOnClickListener(new StartButtonListener());
     }
 
 

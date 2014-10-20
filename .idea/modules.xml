@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/HSMainzRanging.iml" filepath="$PROJECT_DIR$/HSMainzRanging.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HS_Mainz_Ranging.iml" filepath="$PROJECT_DIR$/HS_Mainz_Ranging.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
