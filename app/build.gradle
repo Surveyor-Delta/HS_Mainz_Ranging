@@ -2,15 +2,14 @@ apply plugin: 'com.android.application'
 
 
 android {
-    compileSdkVersion 20
-    buildToolsVersion "20.0.0"
-
+    compileSdkVersion 18
+    buildToolsVersion '21.0.1'
     defaultConfig {
-        applicationId "de.hsmainz.geoinform.hsmainzranging"
+        applicationId 'de.hsmainz.geoinform.hsmainzranging'
         minSdkVersion 18
         targetSdkVersion 20
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
     buildTypes {
         release {
@@ -18,13 +17,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    productFlavors {
+    }
 }
 
 repositories {
     mavenCentral()
-    flatDir {
-        dirs 'libs'
-    }
+    flatDir { dirs 'libs' }
 }
 
 dependencies {
