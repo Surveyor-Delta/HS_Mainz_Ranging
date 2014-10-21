@@ -4,5 +4,12 @@
     <string name="app_name">HS Mainz Ranging</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="scan_beacons">Scan Beacons</string>
+    <string name="meters">m</string>
+    <string name="distance_default">10</string>
+    <string name="distance_hint">Enter the distance for this measurement interval.</string>
+    <string name="seconds">s</string>
+    <string name="interval_hint">Enter the length of the interval (you can stop measuring after the interval ends)</string>
+    <string name="start">Start</string>
 
 </resources>

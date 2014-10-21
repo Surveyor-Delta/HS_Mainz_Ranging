@@ -1,16 +1,87 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity">
+<GridLayout
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:columnCount="5"
+    android:rowCount="4"
+    android:padding="@dimen/main_layout">
+
+    <EditText
+        android:layout_width="86dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/inDistance"
+        android:layout_row="0"
+        android:layout_column="0"
+        android:editable="true"
+        android:numeric="integer"
+        android:gravity="center_horizontal"
+        android:enabled="true"
+        android:text="@string/distance_default"
+        android:hint="@string/distance_hint" />
 
     <TextView
-        android:text="@string/hello_world"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="@string/meters"
+        android:id="@+id/lblMeters"
+        android:layout_row="0"
+        android:layout_column="1"
+        android:inputType="none"
+        android:textStyle="bold" />
 
-</RelativeLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView2"
+        android:layout_row="0"
+        android:layout_column="2"
+        android:layout_gravity="fill" />
+
+    <EditText
+        android:layout_width="86dp"
+        android:layout_height="wrap_content"
+        android:inputType="number"
+        android:ems="10"
+        android:id="@+id/inIntervalLength"
+        android:layout_row="0"
+        android:layout_column="3"
+        android:editable="true"
+        android:numeric="integer"
+        android:gravity="center_horizontal"
+        android:enabled="true"
+        android:text="@string/distance_default"
+        android:hint="@string/interval_hint" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/seconds"
+        android:id="@+id/lblSeconds"
+        android:layout_row="0"
+        android:layout_column="4"
+        android:inputType="none"
+        android:textStyle="bold" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start"
+        android:id="@+id/btnStart"
+        android:layout_row="1"
+        android:layout_column="0"
+        android:layout_columnSpan="5"
+        android:enabled="true"
+        android:layout_gravity="center|fill_horizontal"
+        style="@style/AppTheme" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/listBeacons"
+        android:layout_row="3"
+        android:layout_column="0"
+        android:layout_columnSpan="5" />
+
+</GridLayout>

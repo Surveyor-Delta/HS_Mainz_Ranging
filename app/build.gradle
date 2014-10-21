@@ -11,6 +11,12 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    repositories {
+        mavenCentral()
+        flatDir {
+            dirs 'libs'
+        }
+    }
     buildTypes {
         release {
             runProguard false
@@ -21,4 +27,10 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+dependencies {
+    apply plugin: 'idea'
+    apply plugin: 'maven'
+    compile 'org.altbeacon:android-beacon-library:2.0@aar'
 }
