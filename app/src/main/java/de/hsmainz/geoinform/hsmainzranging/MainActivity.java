@@ -12,7 +12,7 @@ public class MainActivity extends Activity {
 
 
     private ListView    beaconList;
-    private Button      startButton;
+    private Button      buttonStart;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,8 +23,8 @@ public class MainActivity extends Activity {
         beaconList = (ListView) findViewById(R.id.listBeacons);
 
         // Initialising 'Start' button + adding Listener
-        startButton = (Button) findViewById(R.id.btnStart);
-        startButton.setOnClickListener(new StartButtonListener());
+        buttonStart = (Button) findViewById(R.id.btnStart);
+        buttonStart.setOnClickListener(new StartButtonListener());
     }
 
 
