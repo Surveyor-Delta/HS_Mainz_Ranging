@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * Class to (de-)serialize logged Beacon Measurements
  *
- * @author Jan 'KekS' M. (mailto:keks@keksfabrik.eu), 22.10.2014.
+ * @author  KekS (mailto:keks@keksfabrik.eu), 22.10.2014.
  */
 public class BeaconLogObject implements Parcelable, Serializable {
-    protected String            UUID;
+    protected String            uuid;
     protected String            major;
     protected String            minor;
     protected int               distance;
@@ -23,18 +23,18 @@ public class BeaconLogObject implements Parcelable, Serializable {
     /**
      * Default Constructor for a BeaconLogObject
      *
-     * @param   UUID        the beacon's UUID
+     * @param   uuid        the beacon's uuid
      * @param   major       the beacon's major version
      * @param   minor       the beacon's minor version
      * @param   distance    the nominal distance of this measurement
      */
     public BeaconLogObject(
-        String UUID,
+        String uuid,
         String major,
         String minor,
         int distance
     ) {
-        this.UUID = UUID;
+        this.uuid = uuid;
         this.major = major;
         this.minor = minor;
         this.distance = distance;
@@ -49,7 +49,7 @@ public class BeaconLogObject implements Parcelable, Serializable {
      * @param   in      the {@link android.os.Parcel}
      */
     public BeaconLogObject(Parcel in) {
-        this.UUID = in.readString();
+        this.uuid = in.readString();
         this.major = in.readString();
         this.minor = in.readString();
         this.distance = Integer.parseInt(in.readString());
@@ -130,7 +130,7 @@ public class BeaconLogObject implements Parcelable, Serializable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         List<String> data = new ArrayList<>();
-        data.add(this.UUID);
+        data.add(this.uuid);
         data.add(this.major);
         data.add(this.minor);
         data.add("" + this.measurements.size());

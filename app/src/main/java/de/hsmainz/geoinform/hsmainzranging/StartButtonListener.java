@@ -8,9 +8,8 @@ import android.widget.Button;
 /**
  * Listener for the start button.
  *
- * Created by Saufaus on 20.10.2014.
- * @author Saufaus
- * @author Jan 'KekS' M. (mailto:keks@keksfabrik.eu)
+ * @author  Saufaus
+ * @author  KekS (mailto:keks@keksfabrik.eu), 22.10.2014
  */
 
 public class StartButtonListener implements View.OnClickListener {
