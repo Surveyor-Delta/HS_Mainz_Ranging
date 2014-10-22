@@ -1,33 +1,30 @@
 package de.hsmainz.geoinform.hsmainzranging;
 
 import android.app.Activity;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
 
 
 public class MainActivity extends Activity {
 
 
-    ListView listView;
-    Button buttonStart;
+    private ListView    beaconList;
+    private Button      startButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Connecting listView
-        listView = (ListView) findViewById(R.id.listView);
+        // Connecting beaconList
+        beaconList = (ListView) findViewById(R.id.listBeacons);
 
         // Initialising 'Start' button + adding Listener
-        buttonStart = (Button) findViewById(R.id.buttonStart);
-        buttonStart.setOnClickListener(new StartButtonListener());
+        startButton = (Button) findViewById(R.id.btnStart);
+        startButton.setOnClickListener(new StartButtonListener());
     }
 
 
