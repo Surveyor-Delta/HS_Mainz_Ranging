@@ -2,6 +2,7 @@ package de.hsmainz.geoinform.util;
 
 import android.os.Environment;
 import android.text.format.DateFormat;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
  */
 public class FileHelper {
 
+    private static final String TAG = FileHelper.class.toString();
     private OutputStreamWriter  osw;
     private File                extStorage;
     private final String        FILENAME_PREFIX = "beacons";
@@ -46,11 +48,18 @@ public class FileHelper {
                 osw = new OutputStreamWriter(fos);
                 osw.write(fileData);
                 osw.flush();
-                osw.close();
             }
         }
-        catch (IOException ioe) {
-            ioe.printStackTrace();
+        catch (IOException e) {
+            Log.w(TAG, "Problem writing to file", e);
+            e.printStackTrace();
+        } finally {
+            try {
+                osw.close();
+            } catch (IOException e) {
+                Log.w(TAG, "Problem closing file", e);
+                e.printStackTrace();
+            }
         }
     }
 
