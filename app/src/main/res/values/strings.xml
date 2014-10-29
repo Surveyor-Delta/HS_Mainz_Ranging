@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">HS Mainz Ranging</string>
+    <string name="app_name">BeaconRangeLogger</string>
     <string name="action_settings">Settings</string>
     <string name="scan_beacons">Scan Beacons</string>
     <string name="meters">m</string>
@@ -12,5 +12,8 @@
     <string name="interval_hint">interval</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
+    <string name="no_beacons_in_range">no beacons in range</string>
+    <string name="time_left">remaining</string>
+    <string name="again">again?</string>
 
 </resources>

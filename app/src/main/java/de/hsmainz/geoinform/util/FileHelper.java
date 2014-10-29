@@ -19,7 +19,7 @@ import java.util.ArrayList;
  */
 public class FileHelper {
 
-    private static final String TAG = FileHelper.class.toString();
+    private static final String TAG = "FileHelper";
     private OutputStreamWriter  osw;
     private File                extStorage;
     private final String        FILENAME_PREFIX = "beacons";
@@ -38,12 +38,12 @@ public class FileHelper {
      *
      * @param   fileData    String representing the data we want to write to a file.
      */
-    public void createFile(String fileData) {
+    public void createFile(String fileData, int distance) {
         try
         {
             if (isExternalStorageAvailableAndWritable()) {
                 String now = (DateFormat.format("dd-MM-yyyy_HH-mm-ss", new java.util.Date()).toString());
-                File file = new File(extStorage, FILENAME_PREFIX + "_" + now);
+                File file = new File(extStorage, FILENAME_PREFIX + "-" + distance + "m_" + now);
                 FileOutputStream fos = new FileOutputStream(file);
                 osw = new OutputStreamWriter(fos);
                 osw.write(fileData);

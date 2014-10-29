@@ -2,8 +2,9 @@ package de.hsmainz.geoinform.hsmainzranging;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.format.DateFormat;
 
-import org.jetbrains.annotations.NotNull;
+import org.altbeacon.beacon.Beacon;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,7 +15,10 @@ import java.util.List;
  *
  * @author  KekS (mailto:keks@keksfabrik.eu), 22.10.2014.
  */
-public class BeaconLogObject implements Parcelable, Serializable, Comparable<BeaconLogObject> {
+public class BeaconLogObject
+    implements  Parcelable,
+                Serializable,
+                Comparable<BeaconLogObject> {
 
     private Identifier        beaconId;
     private int               distance;
@@ -55,6 +59,19 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
     }
 
 
+
+    /**
+     * Default Constructor for a BeaconLogObject from a {@link org.altbeacon.beacon.Beacon}
+     *
+     * @param   beacon      an {@link org.altbeacon.beacon.Beacon}
+     * @param   distance    the nominal distance of this measurement
+     */
+    public BeaconLogObject(
+            Beacon beacon,
+            int distance
+    ) {
+        this(new Identifier(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString()), distance);
+    }
     /**
      * Overridden method to un-{@link android.os.Parcel}
      * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject}s
@@ -76,7 +93,6 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
         }
     }
 
-
     /**
      * Add a {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement} to this
      * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject}s list
@@ -92,7 +108,6 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
     public void addMeasurement(int rssi, int txPower, double calcDistance) {
         addMeasurement(new Measurement(System.currentTimeMillis(), rssi, txPower, calcDistance));
     }
-
 
     /**
      * Add a {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement} to this
@@ -167,6 +182,8 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
             return new BeaconLogObject[size];
         }
     };
+
+
     /**
      * Getter for {@link #distance}
      *
@@ -176,6 +193,7 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
         return distance;
     }
 
+
     /**
      * Getter for {@link #measurements}
      *
@@ -184,6 +202,7 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
     public List<Measurement> getMeasurements() {
         return measurements;
     }
+
 
     /**
      * Compares this object to the specified object to determine their relative
@@ -198,12 +217,79 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
      *                              comparable to {@code this} instance.
      */
     @Override
-    public int compareTo(@NotNull BeaconLogObject another) {
-        return this.beaconId.compareTo(another.beaconId)*1000
-                + this.distance - another.getDistance();
+    public int compareTo(BeaconLogObject another) {
+        if (this.beaconId.compareTo(another.beaconId) != 0)
+            return this.beaconId.compareTo(another.beaconId);
+        return this.distance - another.getDistance();
     }
 
 
+    /**
+     * String representation for the UI.
+     *
+     * @return  String representation of this
+     */
+    @Override
+    public String toString() {
+        if (measurements.size() > 0) {
+            return this.beaconId.toString() + " @ " + distance + "m: \u2200" + getAverageDistance() + "m (" + measurements.size() + ")";
+        }
+        return this.beaconId.toString() + " @ " + distance + "m.";
+    }
+
+
+    /**
+     * overridden equals method
+     *
+     * @param   other   some other object
+     * @return  whether or not this object is equal to another object
+     */
+    @Override
+    public boolean equals(Object other) {
+        try {
+            return this.compareTo((BeaconLogObject) other) == 0;
+        } catch(Exception ex) {
+            return false;
+        }
+    }
+
+    /**
+     * overridden hashCode method
+     *
+     * @return  the {@link Object#hashCode()} for this
+     */
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 79 * hash + this.beaconId.hashCode();
+        hash = 79 * hash + (int) (this.distance ^ (this.distance >>> 32));
+        return hash;
+    }
+
+    /**
+     * Get the average distance over all {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement}s
+     * saved in the {@link #measurements} list.
+     *
+     * @return  average distance
+     */
+    public double getAverageDistance() {
+        //return measurements.parallelStream().mapToDouble(Measurement::getCalcDistance).average().getAsDouble();
+        double dist = 0.0;
+        for (Measurement m : measurements) {
+            dist += m.getCalcDistance();
+        }
+        return dist / measurements.size();
+    }
+
+
+
+/*=======================================================
+         ___    _            _   _  __ _
+        |_ _|__| | ___ _ __ | |_(_)/ _(_) ___ _ __
+         | |/ _` |/ _ \ '_ \| __| | |_| |/ _ \ '__|
+         | | (_| |  __/ | | | |_| |  _| |  __/ |
+        |___\__,_|\___|_| |_|\__|_|_| |_|\___|_|
+ =======================================================*/
     /**
      * Uniquely identified Beacon.
      *
@@ -214,6 +300,7 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
         private String uuid;
         private String major;
         private String minor;
+
 
         /**
          * Constructor for an individually defined Beacon.
@@ -268,24 +355,76 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
          *                              comparable to {@code this} instance.
          */
         @Override
-        public int compareTo(@NotNull Identifier other) {
-            return  this.uuid.compareTo(other.getUuid())*1000
-                    + this.getMajor().compareTo(other.getMajor())*100
-                    + this.getMinor().compareTo(other.getMinor());
+        public int compareTo(Identifier other) {
+            if (this.uuid.compareTo(other.getUuid()) != 0)
+                return this.uuid.compareTo(other.getUuid());
+            if (this.getMajor().compareTo(other.getMajor()) != 0)
+                return this.getMajor().compareTo(other.getMajor());
+            return this.getMinor().compareTo(other.getMinor());
+        }
+
+        /**
+         * overridden equals method
+         *
+         * @param   other   some other object
+         * @return  whether or not this object is equal to another object
+         */
+        @Override
+        public boolean equals(Object other) {
+            try {
+                return this.compareTo((Identifier) other) == 0;
+            } catch(Exception ex) {
+                return false;
+            }
+        }
+
+        /**
+         * overridden hashCode method
+         *
+         * @return  the {@link Object#hashCode()} for this
+         */
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 79 * hash + this.uuid.hashCode();
+            hash = 79 * hash + this.major.hashCode();
+            hash = 79 * hash + this.minor.hashCode();
+            return hash;
+        }
+
+        /**
+         * String representation for the id consisting of {@link #uuid}, {@link #major} &amp; {@link #minor}.
+         *
+         * @return  String representation of this
+         */
+        @Override
+        public String toString() {
+            return "UUID: " + this.uuid + ", major: " + this.major + ", minor: " + this.minor;
         }
     }
 
+
+
+/*=======================================================
+     __  __                                                    _
+    |  \/  | ___  __ _ ___ _   _ _ __ ___ _ __ ___   ___ _ __ | |_
+    | |\/| |/ _ \/ _` / __| | | | '__/ _ \ '_ ` _ \ / _ \ '_ \| __|
+    | |  | |  __/ (_| \__ \ |_| | | |  __/ | | | | |  __/ | | | |_
+    |_|  |_|\___|\__,_|___/\__,_|_|  \___|_| |_| |_|\___|_| |_|\__|
+
+ =======================================================*/
     /**
      * Class to (de-)serialize Measurements for a {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject}.
      *
      * @author  KekS (mailto:keks@keksfabrik.eu), 22.10.2014.
      */
-    public static class Measurement {
+    public static class Measurement implements Comparable<Measurement> {
 
+        private long      timestamp;
         private int       rssi;
         private int       txPower;
-        private long      timestamp;
         private double    calcDistance;
+
 
         /**
          * Default Constructor for a Measurement without external timestamp.
@@ -297,6 +436,7 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
         public Measurement(int rssi, int txPower, double calcDistance) {
             this(System.currentTimeMillis(), rssi, txPower, calcDistance);
         }
+
 
         /**
          * Default Constructor for a Measurement with external timestamp.
@@ -312,6 +452,7 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
             this.txPower = txPower;
             this.calcDistance = calcDistance;
         }
+
 
         /**
          * Getter for {@link #rssi}
@@ -378,6 +519,41 @@ public class BeaconLogObject implements Parcelable, Serializable, Comparable<Bea
                 proximityString = "Far";
             }
             return proximityString;
+        }
+
+        /**
+         * String representation for the id consisting of {@link #timestamp}, {@link #rssi},
+         * {@link #txPower} &amp; {@link #calcDistance}
+         *
+         * @return  String representation of this
+         */
+        @Override
+        public String toString() {
+            return (DateFormat.format("dd-MM-yyyy_HH-mm-ss", new java.util.Date(timestamp)).toString())
+                    + ", rssi " + this.rssi + ", " + this.txPower + "dB, ~" + this.calcDistance + "m.";
+        }
+
+        /**
+         * Compares this object to the specified object to determine their relative
+         * order.
+         *
+         * @param other the object to compare to this instance.
+         * @return a negative integer if this instance is less than {@code another};
+         * a positive integer if this instance is greater than
+         * {@code another}; 0 if this instance has the same order as
+         * {@code another}.
+         * @throws ClassCastException if {@code another} cannot be converted into something
+         *                            comparable to {@code this} instance.
+         */
+        @Override
+        public int compareTo(Measurement other) {
+            if (this.timestamp - other.getTimestamp() != 0)
+                return new Long(this.timestamp - other.getTimestamp()).intValue();
+            if (this.rssi - other.getRssi() != 0)
+                return this.rssi - other.getRssi();
+            if (this.txPower - other.getTxPower() != 0)
+                return this.txPower - other.getTxPower();
+            return this.calcDistance > other.getCalcDistance() ? 1 : this.calcDistance < other.getCalcDistance() ? -1 : 0;
         }
     }
 }
