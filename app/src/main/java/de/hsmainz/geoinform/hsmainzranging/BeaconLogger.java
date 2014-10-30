@@ -98,7 +98,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                     new CountDownTimer(interval, 1000) {
 
                         public void onTick(long millisUntilFinished) {
-                            buttonStart.setText((millisUntilFinished / 1000) + "s " + R.string.time_left);
+                            // this should work (R.string.* returns an int otherwise)
+                            String limeLeft = getResources().getString(R.string.time_left);
+                            buttonStart.setText((millisUntilFinished / 1000) + "s " + timeLeft);
                         }
 
                         public void onFinish() {
