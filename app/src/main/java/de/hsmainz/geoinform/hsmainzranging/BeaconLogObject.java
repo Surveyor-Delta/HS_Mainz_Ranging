@@ -21,8 +21,9 @@ public class BeaconLogObject
                 Comparable<BeaconLogObject> {
 
     private Identifier        beaconId;
-    private int               distance;
+    private double            distance;
     private List<Measurement> measurements;
+    private double            averageDistance;
 
 
     /**
@@ -51,7 +52,7 @@ public class BeaconLogObject
      */
     public BeaconLogObject(
             Identifier beaconId,
-            int distance
+            double distance
     ) {
         this.beaconId = beaconId;
         this.distance = distance;
@@ -68,7 +69,7 @@ public class BeaconLogObject
      */
     public BeaconLogObject(
             Beacon beacon,
-            int distance
+            double distance
     ) {
         this(new Identifier(beacon.getId1().toString(), beacon.getId2().toString(), beacon.getId3().toString()), distance);
     }
@@ -80,7 +81,7 @@ public class BeaconLogObject
      */
     public BeaconLogObject(Parcel in) {
         this.beaconId = new Identifier(in.readString(), in.readString(), in.readString());
-        this.distance = Integer.parseInt(in.readString());
+        this.distance = Double.parseDouble(in.readString());
         int size = Integer.parseInt(in.readString());
         this.measurements = new ArrayList<>();
         for (int i = 0; i < size; i++) {
@@ -189,7 +190,7 @@ public class BeaconLogObject
      *
      * @return  the fixed distance this logging happend at
      */
-    public int getDistance() {
+    public double getDistance() {
         return distance;
     }
 
@@ -220,7 +221,7 @@ public class BeaconLogObject
     public int compareTo(BeaconLogObject another) {
         if (this.beaconId.compareTo(another.beaconId) != 0)
             return this.beaconId.compareTo(another.beaconId);
-        return this.distance - another.getDistance();
+        return (int) Math.round(this.distance - another.getDistance());
     }
 
 
@@ -262,7 +263,7 @@ public class BeaconLogObject
     public int hashCode() {
         int hash = 7;
         hash = 79 * hash + this.beaconId.hashCode();
-        hash = 79 * hash + (int) (this.distance ^ (this.distance >>> 32));
+        hash = 79 * hash + Double.valueOf(distance).hashCode();
         return hash;
     }
 
@@ -278,8 +279,20 @@ public class BeaconLogObject
         for (Measurement m : measurements) {
             dist += m.getCalcDistance();
         }
-        return dist / measurements.size();
+        averageDistance = dist / measurements.size();
+        return averageDistance;
     }
+
+    /**
+     * Signal you're done collecting {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement}s
+     * so {@link #averageDistance} is calculated and returned.
+     *
+     * @return the {@link #averageDistance}
+     */
+    public double done() {
+        return getAverageDistance();
+    }
+
 
 
 
@@ -537,11 +550,12 @@ public class BeaconLogObject
          * Compares this object to the specified object to determine their relative
          * order.
          *
-         * @param other the object to compare to this instance.
-         * @return a negative integer if this instance is less than {@code another};
-         * a positive integer if this instance is greater than
-         * {@code another}; 0 if this instance has the same order as
-         * {@code another}.
+         * @param   other   the object to compare to this instance.
+         * @return  a negative integer if this instance is less than {@code another};
+         *          a positive integer if this instance is greater than
+         *          {@code another}; 0 if this instance has the same order as
+         *          {@code another}.
+         *
          * @throws ClassCastException if {@code another} cannot be converted into something
          *                            comparable to {@code this} instance.
          */

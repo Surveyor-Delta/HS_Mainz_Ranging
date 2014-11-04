@@ -38,12 +38,14 @@ public class FileHelper {
      *
      * @param   fileData    String representing the data we want to write to a file.
      */
-    public void createFile(String fileData, int distance) {
+    public void createFile(String fileData, double distance) {
         try
         {
             if (isExternalStorageAvailableAndWritable()) {
                 String now = (DateFormat.format("dd-MM-yyyy_HH-mm-ss", new java.util.Date()).toString());
-                File file = new File(extStorage, FILENAME_PREFIX + "-" + distance + "m_" + now);
+                String dist = (Math.round(distance*100)/100.0 + "");
+                dist = dist.substring(0, dist.indexOf(".") > 0 ? dist.indexOf(".") : 0);
+                File file = new File(extStorage, FILENAME_PREFIX + "-" + dist + "m_" + now + ".json");
                 FileOutputStream fos = new FileOutputStream(file);
                 osw = new OutputStreamWriter(fos);
                 osw.write(fileData);

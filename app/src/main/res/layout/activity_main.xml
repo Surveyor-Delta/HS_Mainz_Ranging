@@ -9,7 +9,7 @@
     <EditText
         android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:inputType="number"
+        android:inputType="number|numberDecimal"
         android:ems="10"
         android:id="@+id/inDistance"
         android:layout_row="0"

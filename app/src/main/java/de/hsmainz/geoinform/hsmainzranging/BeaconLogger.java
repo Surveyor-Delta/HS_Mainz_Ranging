@@ -3,8 +3,13 @@ package de.hsmainz.geoinform.hsmainzranging;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.RemoteException;
@@ -29,7 +34,9 @@ import org.altbeacon.beacon.BeaconManager;
 import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.altbeacon.beacon.distance.AndroidModel;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -41,11 +48,11 @@ import java.util.List;
  * @author dyoung, jodwyer
  * @author KekS (mailto:keks@keksfabrik.eu), 22.10.2014
  */
-public class BeaconLogger extends Activity implements BeaconConsumer {
+public class BeaconLogger extends Activity implements BeaconConsumer, SensorEventListener {
 
     private static final String             TAG = "BeaconLogger";
     private static final Gson               gson = new Gson();
-    private int                             distance;   // distance of measurement
+    private double                          distance;   // distance of measurement
     private long                            interval;   // length of the interval
     private final long                      logScanLengthMillis = 2000L;    // 2s
     private final long                      logScanWaitMillis = 100L;       // 100ms
@@ -57,11 +64,14 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
     private Region                          region;
     private List<BeaconLogObject>           beaconLogList;
     private ArrayAdapter<BeaconLogObject>   adapter;
+    private SensorManager                   sm;
+    private Sensor                          mAccelerometer;
     private ListView                        beaconList;
     private EditText                        editDist;
     private EditText                        editInterval;
     private Button                          buttonStart;
     private BeaconScannerApplication        app;
+    private List<float[]>                   gs;
 
 // -------------------------- overrides --------------------------
 
@@ -76,6 +86,15 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
         verifyBluetooth();
         Log.d(TAG, "BeaconLogger created.");
         Log.v(TAG, "BLE is " + (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) ? "" : "not ") + "enabled.");
+
+        sm = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
+        List<Sensor> sl = sm.getSensorList(Sensor.TYPE_ALL);
+        mAccelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        for (Sensor sensor: sl) {
+            Log.i(TAG, sensor.getType() + "\t" + sensor.getName() + " (" + sensor.getVendor() + ") v" + sensor.getVersion());
+        }
+        gs = new ArrayList<>();
+        sm.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         this.app = (BeaconScannerApplication) this.getApplication();
         // Connecting beaconList
@@ -98,7 +117,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                     new CountDownTimer(interval, 1000) {
 
                         public void onTick(long millisUntilFinished) {
-                            buttonStart.setText((millisUntilFinished / 1000) + "s " + R.string.time_left);
+                            // this should work (R.string.* returns an int otherwise)
+                            String timeLeft = getResources().getString(R.string.time_left);
+                            buttonStart.setText((millisUntilFinished / 1000) + "s " + timeLeft);
                         }
 
                         public void onFinish() {
@@ -127,9 +148,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                     v.setEnabled(false);
                     v.setEnabled(true);
                     distIsSet = true;
+                    distance = Double.parseDouble(v.getText().toString());
                     if (intervalIsSet) {
                         buttonStart.setEnabled(true);
-                        distance = Integer.parseInt(v.getText().toString());
                     }
                 } else {
                     distIsSet = false;
@@ -149,9 +170,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                     v.setEnabled(false);
                     v.setEnabled(true);
                     intervalIsSet = true;
+                    interval = Integer.parseInt(v.getText().toString())*1000l;
                     if (distIsSet) {
                         buttonStart.setEnabled(true);
-                        interval = Integer.parseInt(v.getText().toString())*1000l;
                     }
                 } else {
                     intervalIsSet = false;
@@ -165,6 +186,22 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                 setBeaconLayout("m:2-3=0215,i:4-19,i:20-21,i:22-23,p:24-24"));
         app.getBeaconManager().bind(this);
         region = new Region("myRangingUniqueId", null, null, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        gs.add(event.values);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
     }
 
     /**
@@ -220,6 +257,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
             stopLogging();
         stopScanning();
         app.getBeaconManager().unbind(this);
+        sm.unregisterListener(this);
     }
 
     /**
@@ -287,6 +325,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
      */
     public void startLogging() {
         Log.v(TAG, "START logging");
+        editDist.setEnabled(false);
+        editInterval.setEnabled(false);
+        gs.clear();
         verifyBluetooth();
         app.getBeaconManager().setForegroundScanPeriod(logScanLengthMillis);
         app.getBeaconManager().setForegroundBetweenScanPeriod(logScanWaitMillis);
@@ -313,6 +354,8 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
      */
     public void stopLogging() {
         Log.v(TAG, "STOP logging");
+        editDist.setEnabled(true);
+        editInterval.setEnabled(true);
         app.getBeaconManager().setForegroundScanPeriod(scanLengthMillis);
         app.getBeaconManager().setForegroundBetweenScanPeriod(scanWaitMillis);
         app.getBeaconManager().setBackgroundScanPeriod(scanLengthMillis);
@@ -325,7 +368,10 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
         isLogging = false;
         if (beaconLogList.size() > 0) {
             // Write file
-            app.getFileHelper().createFile(gson.toJson(beaconLogList), distance);
+            DeSerializerClass dsc = new DeSerializerClass(beaconLogList, distance);
+            dsc.calcOrientation(gs);
+            gs.clear();
+            app.getFileHelper().createFile(gson.toJson(dsc), distance);
             // Display file created message.
             Toast.makeText(getBaseContext(),
                     "File saved to:" + getFilesDir().getAbsolutePath(),
@@ -379,7 +425,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
                 synchronized(this) {
                     beaconLogList.add(blo);
                     adapter.notifyDataSetChanged();
-                    this.notify();
+                    ((Object) this).notify();
                 }
             }
         };
@@ -438,9 +484,42 @@ public class BeaconLogger extends Activity implements BeaconConsumer {
 
             });
             builder.show();
-
         }
-
     }
 
+    private class DeSerializerClass implements Serializable {
+        AndroidModel            model = AndroidModel.forThisDevice();
+        List<BeaconLogObject>   loggedBeacons;
+        double                  distance;
+        Orientation             averageOrientation;
+
+        public DeSerializerClass(List<BeaconLogObject> bl, double distance) {
+            this.loggedBeacons = bl;
+            this.distance = distance;
+        }
+
+        public void calcOrientation(List<float[]> g) {
+            averageOrientation = new Orientation();
+            int count = 0;
+            for (float[] f : g) {
+                if (f.length == 3) {
+                    count++;
+                    averageOrientation.azimuth += f[0];
+                    averageOrientation.pitch += f[1];
+                    averageOrientation.roll += f[2];
+                }
+            }
+            if (count > 1) {
+                averageOrientation.azimuth /= count;
+                averageOrientation.pitch /= count;
+                averageOrientation.roll /= count;
+            }
+        }
+
+        private class Orientation {
+            /** rotation around Z axis */ double azimuth = 0.0;
+            /** rotation around Y axis */ double pitch = 0.0;
+            /** rotation around X axis */ double roll = 0.0;
+        }
+    }
 }

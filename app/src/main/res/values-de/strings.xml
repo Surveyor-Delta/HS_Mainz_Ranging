@@ -14,6 +14,6 @@
     <string name="stop">Stop</string>
     <string name="no_beacons_in_range">Keine Beacons in der Umgebung</string>
     <string name="time_left">noch</string>
-    <string name="again">nochmal?</string>
+    <string name="again">Nochmal?</string>
 
 </resources>
