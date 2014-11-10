@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 /**
@@ -43,7 +45,9 @@ public class FileHelper {
         {
             if (isExternalStorageAvailableAndWritable()) {
                 String now = (DateFormat.format("dd-MM-yyyy_HH-mm-ss", new java.util.Date()).toString());
-                File file = new File(extStorage, FILENAME_PREFIX + "-" + String.format("%.3g%n", distance) + "m_" + now + ".json");
+                DecimalFormat df = new DecimalFormat("#.###");
+                df.setRoundingMode(RoundingMode.HALF_EVEN);
+                File file = new File(extStorage, FILENAME_PREFIX + "-" + df.format(distance) + "m_" + now + ".json");
                 FileOutputStream fos = new FileOutputStream(file);
                 osw = new OutputStreamWriter(fos);
                 osw.write(fileData);
