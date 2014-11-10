@@ -23,6 +23,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,14 +49,17 @@ import java.util.List;
  * @author dyoung, jodwyer
  * @author KekS (mailto:keks@keksfabrik.eu), 22.10.2014
  */
-public class BeaconLogger extends Activity implements BeaconConsumer, SensorEventListener {
+public class    BeaconLogger
+    extends     Activity
+    implements  BeaconConsumer,
+                SensorEventListener {
 
     private static final String             TAG = "BeaconLogger";
     private static final Gson               gson = new Gson();
     private double                          distance;   // distance of measurement
     private long                            interval;   // length of the interval
-    private final long                      logScanLengthMillis = 2000L;    // 2s
-    private final long                      logScanWaitMillis = 100L;       // 100ms
+    private long                            logScanLengthMillis = 1100L;    // 1.1s
+    private final long                      logScanWaitMillis = 0L;         // right away
     private final long                      scanLengthMillis = 10000L;      // 10s
     private final long                      scanWaitMillis = 1000L;         // 1s
     private boolean                         isLogging = false;
@@ -65,8 +69,10 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
     private List<BeaconLogObject>           beaconLogList;
     private ArrayAdapter<BeaconLogObject>   adapter;
     private SensorManager                   sm;
-    private Sensor                          mAccelerometer;
+    private Sensor                          mGyroscope;
     private ListView                        beaconList;
+    private SeekBar                         seekBar;
+    private TextView                        millis;
     private EditText                        editDist;
     private EditText                        editInterval;
     private Button                          buttonStart;
@@ -89,12 +95,12 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
 
         sm = (SensorManager) this.getSystemService(Context.SENSOR_SERVICE);
         List<Sensor> sl = sm.getSensorList(Sensor.TYPE_ALL);
-        mAccelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mGyroscope = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         for (Sensor sensor: sl) {
             Log.i(TAG, sensor.getType() + "\t" + sensor.getName() + " (" + sensor.getVendor() + ") v" + sensor.getVersion());
         }
         gs = new ArrayList<>();
-        sm.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        sm.registerListener(this, mGyroscope, SensorManager.SENSOR_DELAY_FASTEST);
 
         this.app = (BeaconScannerApplication) this.getApplication();
         // Connecting beaconList
@@ -102,6 +108,23 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
         beaconLogList = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, R.layout.list_layout, beaconLogList);
         beaconList.setAdapter(adapter);
+        millis = (TextView) findViewById(R.id.lblMillis);
+        seekBar = (SeekBar) findViewById(R.id.scanLengthBar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
+                millis.setText(Integer.valueOf(progresValue + 100) + Integer.toString(R.string.millis));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                logScanLengthMillis = seekBar.getProgress() + 100;
+            }
+        });
 
         // Initialising 'Start' button + adding Listener
         buttonStart = (Button) findViewById(R.id.btnStart);
@@ -143,7 +166,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 Log.d(TAG, "dist entered: " + v.getText().toString() + " (" + (actionId == EditorInfo.IME_ACTION_DONE && v.getText().length() >= 1) + ")");
-                if (actionId == EditorInfo.IME_ACTION_DONE && v.getText().length() >= 1) {
+                if (v.getText().length() >= 1) {
                     // ugly hack to get the keyboard to disappear
                     v.setEnabled(false);
                     v.setEnabled(true);
@@ -165,7 +188,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 Log.d(TAG, "interval entered: " + v.getText().toString() + " (" + (actionId == EditorInfo.IME_ACTION_DONE && v.getText().length() >= 1) + ")");
-                if (actionId == EditorInfo.IME_ACTION_DONE && v.getText().length() >= 1) {
+                if (v.getText().length() >= 1) {
                     // ugly hack to get the keyboard to disappear
                     v.setEnabled(false);
                     v.setEnabled(true);
@@ -325,6 +348,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
      */
     public void startLogging() {
         Log.v(TAG, "START logging");
+        seekBar.setEnabled(false);
         editDist.setEnabled(false);
         editInterval.setEnabled(false);
         gs.clear();
@@ -354,6 +378,7 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
      */
     public void stopLogging() {
         Log.v(TAG, "STOP logging");
+        seekBar.setEnabled(true);
         editDist.setEnabled(true);
         editInterval.setEnabled(true);
         app.getBeaconManager().setForegroundScanPeriod(scanLengthMillis);
@@ -368,6 +393,9 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
         isLogging = false;
         if (beaconLogList.size() > 0) {
             // Write file
+            for (BeaconLogObject blo: beaconLogList) {
+                blo.done();
+            }
             DeSerializerClass dsc = new DeSerializerClass(beaconLogList, distance);
             dsc.calcOrientation(gs);
             gs.clear();
@@ -514,6 +542,13 @@ public class BeaconLogger extends Activity implements BeaconConsumer, SensorEven
                 averageOrientation.pitch /= count;
                 averageOrientation.roll /= count;
             }
+            averageOrientation.azimuth = Math.toDegrees(averageOrientation.azimuth);
+            averageOrientation.pitch = Math.toDegrees(averageOrientation.pitch);
+            averageOrientation.roll = Math.toDegrees(averageOrientation.roll);
+            Log.i(TAG,
+                    "Average Rotations: RotX = " + averageOrientation.roll
+                    + "°, RotY = " + averageOrientation.pitch
+                    + "°, RotZ = " + averageOrientation.azimuth + "°");
         }
 
         private class Orientation {

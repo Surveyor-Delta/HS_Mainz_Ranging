@@ -43,9 +43,7 @@ public class FileHelper {
         {
             if (isExternalStorageAvailableAndWritable()) {
                 String now = (DateFormat.format("dd-MM-yyyy_HH-mm-ss", new java.util.Date()).toString());
-                String dist = (Math.round(distance*100)/100.0 + "");
-                dist = dist.substring(0, dist.indexOf(".") > 0 && dist.length() > dist.indexOf(".") + 2 ? dist.indexOf(".") + 2 : 0);
-                File file = new File(extStorage, FILENAME_PREFIX + "-" + dist + "m_" + now + ".json");
+                File file = new File(extStorage, FILENAME_PREFIX + "-" + String.format("%.3g%n", distance) + "m_" + now + ".json");
                 FileOutputStream fos = new FileOutputStream(file);
                 osw = new OutputStreamWriter(fos);
                 osw.write(fileData);

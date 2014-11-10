@@ -9,6 +9,7 @@
     <string name="distance_hint">Distanz</string>
     <string name="seconds_default"></string>
     <string name="seconds">s</string>
+    <string name="millis">ms</string>
     <string name="interval_hint">Intervall</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>

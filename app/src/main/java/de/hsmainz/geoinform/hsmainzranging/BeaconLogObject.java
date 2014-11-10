@@ -233,7 +233,7 @@ public class BeaconLogObject
     @Override
     public String toString() {
         if (measurements.size() > 0) {
-            return this.beaconId.toString() + " @ " + distance + "m: \u2200" + getAverageDistance() + "m (" + measurements.size() + ")";
+            return this.beaconId.toString() + " @ " + distance + "m: \u2205" + getAverageDistance() + "m (" + measurements.size() + ")";
         }
         return this.beaconId.toString() + " @ " + distance + "m.";
     }
