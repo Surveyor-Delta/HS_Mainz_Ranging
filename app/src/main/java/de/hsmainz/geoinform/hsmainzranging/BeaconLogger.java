@@ -113,7 +113,7 @@ public class    BeaconLogger
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progresValue, boolean fromUser) {
-                millis.setText(Integer.valueOf(progresValue + 100) + Integer.toString(R.string.millis));
+                millis.setText(Integer.valueOf(progresValue + 100) + getResources().getString(R.string.millis));
             }
 
             @Override
