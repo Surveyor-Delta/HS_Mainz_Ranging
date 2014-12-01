@@ -87,9 +87,9 @@ public class BeaconLogObject
         for (int i = 0; i < size; i++) {
             getMeasurements().add(new Measurement(
                     Long.parseLong(in.readString()),
+                    Double.parseDouble(in.readString()),
                     Integer.parseInt(in.readString()),
-                    Integer.parseInt(in.readString()),
-                    Integer.parseInt(in.readString())
+                    Double.parseDouble(in.readString())
             ));
         }
     }
@@ -98,31 +98,29 @@ public class BeaconLogObject
      * Add a {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement} to this
      * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject}s list
      * {@link #measurements} by generating it internally through it's Constructor
-     * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement#Measurement(long, int, int, double)}
-     * by chaining through {@link #addMeasurement(long, int, int, double)} at the current time
+     * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement#Measurement(long, double, int)}
+     * by chaining through {@link #addMeasurement(long, double, int)} at the current time
      * ({@link System#currentTimeMillis()})
      *
      * @param   rssi            received signal strength indicator
      * @param   txPower         transmit power
-     * @param   calcDistance    calculated distance
      */
-    public void addMeasurement(int rssi, int txPower, double calcDistance) {
-        addMeasurement(new Measurement(System.currentTimeMillis(), rssi, txPower, calcDistance));
+    public void addMeasurement(double rssi, int txPower) {
+        addMeasurement(new Measurement(System.currentTimeMillis(), rssi, txPower));
     }
 
     /**
      * Add a {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement} to this
      * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject}s list
      * {@link #measurements} by generating it internally through it's Constructor
-     * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement#Measurement(long, int, int, double)}
+     * {@link de.hsmainz.geoinform.hsmainzranging.BeaconLogObject.Measurement#Measurement(long, double, int)}
      *
      * @param   timestamp       timestamp of the Measurement
      * @param   rssi            received signal strength indicator
      * @param   txPower         transmit power
-     * @param   calcDistance    calculated distance
      */
-    public void addMeasurement(long timestamp, int rssi, int txPower, double calcDistance) {
-        addMeasurement(new Measurement(timestamp, rssi, txPower, calcDistance));
+    public void addMeasurement(long timestamp, double rssi, int txPower) {
+        addMeasurement(new Measurement(timestamp, rssi, txPower));
     }
 
 
@@ -434,7 +432,7 @@ public class BeaconLogObject
     public static class Measurement implements Comparable<Measurement> {
 
         private long      timestamp;
-        private int       rssi;
+        private double    rssi;
         private int       txPower;
         private double    calcDistance;
 
@@ -444,10 +442,9 @@ public class BeaconLogObject
          *
          * @param   rssi            received signal strength indicator
          * @param   txPower         transmit power
-         * @param   calcDistance    calculated distance
          */
-        public Measurement(int rssi, int txPower, double calcDistance) {
-            this(System.currentTimeMillis(), rssi, txPower, calcDistance);
+        public Measurement(double rssi, int txPower) {
+            this(System.currentTimeMillis(), rssi, txPower);
         }
 
 
@@ -457,9 +454,25 @@ public class BeaconLogObject
          * @param   timestamp       timestamp of the Measurement
          * @param   rssi            received signal strength indicator
          * @param   txPower         transmit power
+         */
+        public Measurement(long timestamp, double rssi, int txPower) {
+            this.timestamp = timestamp;
+            this.rssi = rssi;
+            this.txPower = txPower;
+            this.calcDistance = calculateAccuracy(txPower, rssi);
+        }
+
+
+        /**
+         * DeParcelling Constructor for a Measurement with external timestamp.
+         * Do not use this from the outside.
+         *
+         * @param   timestamp       timestamp of the Measurement
+         * @param   rssi            received signal strength indicator
+         * @param   txPower         transmit power
          * @param   calcDistance    calculated distance
          */
-        public Measurement(long timestamp, int rssi, int txPower, double calcDistance) {
+        private Measurement(long timestamp, double rssi, int txPower, double calcDistance) {
             this.timestamp = timestamp;
             this.rssi = rssi;
             this.txPower = txPower;
@@ -472,7 +485,7 @@ public class BeaconLogObject
          *
          * @return  received signal strength indicator
          */
-        public int getRssi() {
+        public double getRssi() {
             return rssi;
         }
 
@@ -564,10 +577,33 @@ public class BeaconLogObject
             if (this.timestamp - other.getTimestamp() != 0)
                 return new Long(this.timestamp - other.getTimestamp()).intValue();
             if (this.rssi - other.getRssi() != 0)
-                return this.rssi - other.getRssi();
+                return new Double(Math.signum(this.rssi - other.getRssi())).intValue();
             if (this.txPower - other.getTxPower() != 0)
                 return this.txPower - other.getTxPower();
             return this.calcDistance > other.getCalcDistance() ? 1 : this.calcDistance < other.getCalcDistance() ? -1 : 0;
+        }
+
+        /**
+         * Calculate distance from txPower and RSSI. Based on
+         * <a href="http://stackoverflow.com/questions/20416218/understanding-ibeacon-distancing">this</a>.
+         *
+         * @param   txPower transmit power indicated by the beacon
+         * @param   rssi    received signal strength indicator
+         * @return  the distance indicated by this formula
+         */
+        protected static double calculateAccuracy(int txPower, double rssi) {
+            if (rssi == 0) {
+                return -1.0; // if we cannot determine accuracy, return -1.
+            }
+
+            double ratio = rssi*1.0/txPower;
+            if (ratio < 1.0) {
+                return Math.pow(ratio,10);
+            }
+            else {
+                double accuracy =  (0.89976)*Math.pow(ratio,7.7095) + 0.111;
+                return accuracy;
+            }
         }
     }
 }

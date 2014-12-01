@@ -38,6 +38,7 @@ import org.altbeacon.beacon.Region;
 import org.altbeacon.beacon.distance.AndroidModel;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -469,9 +470,8 @@ public class    BeaconLogger
             beaconLogList.get(beaconLogList.indexOf(blo))
                     .addMeasurement(
                             new BeaconLogObject.Measurement(
-                                    beacon.getRssi(),
-                                    beacon.getTxPower(),
-                                    beacon.getDistance()
+                                    getRunningRssi(beacon),
+                                    beacon.getTxPower()
                             )
                     );
         }
@@ -555,6 +555,27 @@ public class    BeaconLogger
             /** rotation around Z axis */ double azimuth = 0.0;
             /** rotation around Y axis */ double pitch = 0.0;
             /** rotation around X axis */ double roll = 0.0;
+        }
+    }
+
+    /**
+     * Uses reflection to get {@link org.altbeacon.beacon.Beacon#mRunningAverageRssi} (double)
+     * instead of Rssi (int)
+     *
+     * @param   beacon  the beacon to get the runningaverageRssi
+     * @return  {@link org.altbeacon.beacon.Beacon#mRunningAverageRssi} of the beacon or
+     *          {@link org.altbeacon.beacon.Beacon#getRssi()} if refection failed
+     */
+    private double getRunningRssi(Beacon beacon) {
+        try {
+            Class<?> clazz = ((Object) beacon).getClass();
+            Field field = clazz.getDeclaredField("mRunningAverageRssi");
+            field.setAccessible(true);
+            Double rssi = (Double) field.get(beacon);
+            Log.i(TAG, "mRunningAverageRssi = " + rssi);
+            return rssi != null && rssi != Double.NaN && rssi > 0.0d ? rssi : 1.0 * beacon.getRssi();
+        } catch (Exception ex) {
+            return 1.0 * beacon.getRssi();
         }
     }
 }
